@@ -2,7 +2,7 @@ Discard model:
 	
 	data process:
 
-		標籤值:1~152(牌局資訊)、153(label:棄牌值)
+		標籤值:1~986(牌局資訊)、987(label:棄牌值)
 		
 		時機:每次棄牌
 
@@ -12,7 +12,7 @@ chow model:
 
 	data process:(新增一個flag記是否有紀錄的資訊)
 
-		標籤值:1~152(牌局資訊)、153(上家棄牌)、154(label:是否吃)
+		標籤值:1~986(牌局資訊)、987(label:是否吃)
 
 		時機:每次可以吃的時候
 
@@ -25,3 +25,29 @@ chow model:
 			3.等到下一輪如果是吃操作就label=1，否則label=0後寫入datalist record_chow_label 例外:槓、碰直接不計
 
 			4.每次N或抽牌就重置flag record_chow_label
+
+		備註:
+
+			控制label=1、0的比例為1:1
+
+pung model:
+
+	data process:(新增一個flag記是否有紀錄的資訊)
+
+		標籤值:1~986(牌局資訊)、987(label:是否碰)
+
+		時機:每次可以碰的時候
+
+		步驟:
+			
+			1.每次棄牌檢查是否有玩家的手牌能碰
+
+			2.如果可以就紀錄一筆資訊(只包含牌局資訊以及打出的牌，未含label值) record_pung_info
+
+			3.等到下一輪如果是碰操作就label=1，否則label=0後寫入datalist record_pung_label 例外:槓、吃直接不計
+
+			4.每次N或抽牌就重置flag record_pung_label
+
+		備註:
+
+			控制label=1、0的比例為1:1
