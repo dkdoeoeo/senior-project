@@ -1,53 +1,10 @@
-Discard model:
+模型輸入輸出:
 	
-	data process:
-
-		標籤值:1~986(牌局資訊)、987(label:棄牌值)
+	模型輸入:
+		discard、chow、pung、kong、riichi:986場面資訊
+		predictior:153場面資訊
+	模型輸出:
+		discard:int 對應34牌種
+		chow、pung、kong、riichi:int 0 or 1是否執行動作
+		predictior:int 預測分數
 		
-		時機:每次棄牌
-
-		步驟:每次棄牌時根據抽到的玩家視角添加一筆資訊
-
-chow model:
-
-	data process:(新增一個flag記是否有紀錄的資訊)
-
-		標籤值:1~986(牌局資訊)、987(label:是否吃)
-
-		時機:每次可以吃的時候
-
-		步驟:
-			
-			1.每次棄牌檢查下一位的手牌能不能吃
-
-			2.如果可以就紀錄一筆資訊(只包含牌局資訊以及打出的牌，未含label值) record_chow_info
-
-			3.等到下一輪如果是吃操作就label=1，否則label=0後寫入datalist record_chow_label 例外:槓、碰直接不計
-
-			4.每次N或抽牌就重置flag record_chow_label
-
-		備註:
-
-			控制label=1、0的比例為1:1
-
-pung model:
-
-	data process:(新增一個flag記是否有紀錄的資訊)
-
-		標籤值:1~986(牌局資訊)、987(label:是否碰)
-
-		時機:每次可以碰的時候
-
-		步驟:
-			
-			1.每次棄牌檢查是否有玩家的手牌能碰
-
-			2.如果可以就紀錄一筆資訊(只包含牌局資訊以及打出的牌，未含label值) record_pung_info
-
-			3.等到下一輪如果是碰操作就label=1，否則label=0後寫入datalist record_pung_label 例外:槓、吃直接不計
-
-			4.每次N或抽牌就重置flag record_pung_label
-
-		備註:
-
-			控制label=1、0的比例為1:1
