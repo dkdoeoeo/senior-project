@@ -1,60 +1,126 @@
-import AI_function
+from MahjongHelper import MahjongHelper
 import torch
 import const
 import torch.nn.functional as F
+from mahjong.hand_calculating.hand_config import HandConfig
+from my_struct.action import Action
+import numpy as np
+import os
+import torch.nn as nn
+from model_define import DiscardCNN
+from model_define import MyCNN
+import my_struct
 
 class MahjongAI():
     def __init__(self):
-        self.discard_model = torch.load("discard_model.pth")
-        self.pung_model = torch.load("pung_model.pth")
-        self.chow_model = torch.load("chow_model.pth")
-        self.kong_model = torch.load("kong_model.pth")
-        self.riichi_model = torch.load("riichi_model.pth")
-    
-    def process_draw(self,model_input: list,game_state: dict):#處理自己摸牌
-        if AI_function.if_can_long(game_state):
-            return const.LONG,const.NONE
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.mahjongHelper = MahjongHelper()
         
-        if AI_function.if_can_kong(game_state):
+        self.discard_model_file = 'E:/專題/pygame_vision/models/discard_model.pth'
+        self.discard_model=torch.load(self.discard_model_file, weights_only=False).to(device)
+        self.discard_model.eval()
+
+        self.pung_model_file = 'E:/專題/pygame_vision/models/pung_model.pth'
+        self.pung_model=torch.load(self.pung_model_file, weights_only=False).to(device)
+        self.pung_model.eval()
+
+        self.chow_model_file = 'E:/專題/pygame_vision/models/chow_model.pth'
+        self.chow_model=torch.load(self.chow_model_file, weights_only=False).to(device)
+        self.chow_model.eval()
+
+        self.kong_model_file = 'E:/專題/pygame_vision/models/kong_model.pth'
+        self.kong_model=torch.load(self.kong_model_file, weights_only=False).to(device)
+        self.kong_model.eval()
+
+        self.riichi_model_file = 'E:/專題/pygame_vision/models/riichi_model.pth'
+        self.riichi_model=torch.load(self.riichi_model_file, weights_only=False).to(device)
+        self.riichi_model.eval()
+
+
+    def process_draw(self,game_state: my_struct.Game_state,draw_tile:int):#處理自己摸牌
+        model_input = self.mahjongHelper.process_model_input(game_state)
+        model_input = model_input.to("cuda")
+
+        config = HandConfig(
+            is_tsumo=True,
+            is_riichi = (game_state.riichi_info[game_state.current_player] == 1),
+            round_wind = game_state.dealer,
+            player_wind=game_state.player_wind[game_state.current_player] == 1
+        )
+
+        #if self.mahjongHelper.can_long(game_state["hands"][game_state["current_player"]],draw_tile,config):
+            #return Action(const.SELF_LONG)
+        
+        if self.mahjongHelper.can_kong(game_state.players[game_state.current_player].hand,game_state.players[game_state.current_player].meld,game_state.last_discarded_tile,True):
             kong_point = self.kong_model(model_input)
 
             if kong_point >= const.THRESHOLD:
-                return const.KONG,const.NONE
+                return self.mahjongHelper.best_kong_choice(game_state.players[game_state.current_player].hand,
+                                                                 game_state.players[game_state.current_player].meld,
+                                                                 game_state.last_discarded_tile,
+                                                                 True)
 
-        if AI_function.if_can_riichi(game_state):
+        if self.mahjongHelper.can_riichi(game_state.players[game_state.current_player].hand,game_state.players[game_state.current_player].meld):
             riichi_point = self.riichi_model(model_input)
 
             if riichi_point >= const.THRESHOLD:
-                return const.RIICHI,const.NONE
+                return Action(const.RIICHI)
 
         discard_output = self.discard_model(model_input).float()
         discard_probabilities = F.softmax(discard_output, dim=0)
-        discard = torch.argmax(discard_probabilities, dim=0).item()
-        return const.DISCARD,discard
+        hand_probs = {tile: discard_probabilities[tile].item() for tile in game_state.players[game_state.current_player].hand}
+        discard = max(hand_probs, key=hand_probs.get)
 
-    def process_discard(self,model_input: list,game_state: dict):#處理別人打牌
-        if AI_function.if_can_long(game_state):
-            return const.LONG,const.NONE
+        return Action(const.DISCARD,discard)
+
+    def process_discard(self,game_state:my_struct.Game_state,current_player = -1):#處理別人打牌
+        if current_player == -1:
+            current_player = game_state.current_player
+
+        model_input = self.mahjongHelper.process_model_input(game_state)
+        model_input = model_input.to("cuda")
+        config = HandConfig(
+            is_tsumo=True,
+            is_riichi = (game_state.riichi_info[current_player] == 1),
+            round_wind = game_state.dealer,
+            player_wind=game_state.player_wind[current_player] == 1
+        )
+
+        if self.mahjongHelper.can_long(game_state.players[current_player].hand,game_state.last_discarded_tile,config):
+            return Action(const.OTHER_LONG)
         
         chow_point = 0
-        pung_point = 0
+        pong_point = 0
         kong_point = 0
 
-        if AI_function.if_can_chow(game_state):
+        if (current_player == (game_state.current_player + 1) % 4) and self.mahjongHelper.can_chow(game_state.players[current_player].hand,game_state.last_discarded_tile):
             chow_point = self.chow_model(model_input)
         
-        if AI_function.if_can_pung(game_state):
-            pung_point = self.pung_model(model_input)
+        if self.mahjongHelper.can_pong(game_state.players[current_player].hand,game_state.last_discarded_tile):
+            pong_point = self.pung_model(model_input)
         
-        if AI_function.if_can_kong(game_state):
+        if self.mahjongHelper.can_kong(game_state.players[current_player].hand,game_state.players[current_player].meld,game_state.last_discarded_tile,False):
             kong_point = self.kong_model(model_input)
 
-        if chow_point >= const.THRESHOLD or pung_point >= const.THRESHOLD or kong_point >= const.THRESHOLD:
+        if chow_point >= const.THRESHOLD or pong_point >= const.THRESHOLD or kong_point >= const.THRESHOLD:
             
-            if max(chow_point,pung_point,kong_point) == kong_point:
-                return const.KONG,const.NONE
-            if max(chow_point,pung_point,kong_point) == pung_point:
-                return const.PUNG,const.NONE
-            if max(chow_point,pung_point,kong_point) == chow_point:
-                return const.CHOW,const.NONE
-            return const.NONE,const.NONE
+            if max(chow_point,pong_point,kong_point) == kong_point:
+                return self.mahjongHelper.best_kong_choice(game_state.players[current_player].hand,
+                                                                 game_state.players[current_player].meld,
+                                                                 game_state.last_discarded_tile,
+                                                                 False)
+            if max(chow_point,pong_point,kong_point) == pong_point:
+                return Action(const.PONG,game_state.last_discarded_tile,[game_state.last_discarded_tile,game_state.last_discarded_tile,game_state.last_discarded_tile])
+            if max(chow_point,pong_point,kong_point) == chow_point:
+                return self.mahjongHelper.best_chow_choice(game_state.players[current_player].hand,game_state.last_discarded_tile)
+        return Action(const.NONE)
+    
+    def just_discard(self,game_state:my_struct.Game_state):
+        model_input = self.mahjongHelper.process_model_input(game_state)
+        model_input = model_input.to("cuda")
+        discard_output = self.discard_model(model_input).float()
+        discard_probabilities = F.softmax(discard_output, dim=0)
+        hand_probs = {tile: discard_probabilities[tile].item() for tile in game_state.players[game_state.current_player].hand}
+        discard = max(hand_probs, key=hand_probs.get)
+
+        return Action(const.DISCARD,discard)

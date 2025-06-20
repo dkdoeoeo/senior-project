@@ -1,0 +1,69 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36" version="26.2.13">
+  <diagram name="第 1 页" id="y2zy6QsQyiSOwMouHNZA">
+    <mxGraphModel dx="2255" dy="743" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="KuYwTaL39QZpws9W_LCt-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="KuYwTaL39QZpws9W_LCt-1" target="KuYwTaL39QZpws9W_LCt-2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="423" y="150" />
+              <mxPoint x="-273" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="KuYwTaL39QZpws9W_LCt-1" target="KuYwTaL39QZpws9W_LCt-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="423" y="150" />
+              <mxPoint x="-5" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="KuYwTaL39QZpws9W_LCt-1" target="KuYwTaL39QZpws9W_LCt-4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="423" y="150" />
+              <mxPoint x="280" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="KuYwTaL39QZpws9W_LCt-1" target="KuYwTaL39QZpws9W_LCt-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="423" y="150" />
+              <mxPoint x="580" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-1" value="先判斷是哪種行為" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="40" width="186" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-2" value="設置game_state[if_opened_hand][player]=True" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-413" y="190" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-3" value="加入該玩家副露&lt;div&gt;移除副露手牌&lt;/div&gt;&lt;div&gt;如果是玩家吃則設置需要玩家行為&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-110" y="190" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-4" value="&lt;div&gt;加入該玩家副露&lt;/div&gt;&lt;div&gt;移除副露手牌&lt;/div&gt;&lt;div&gt;如果是玩家吃則設置需要玩家行為&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="190" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-12" value="明牌" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-340" y="150" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-14" value="吃" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-70" y="160" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-16" value="碰" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="210" y="160" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-18" value="&lt;div&gt;加入該玩家副露&lt;/div&gt;&lt;div&gt;移除副露手牌&lt;/div&gt;&lt;div&gt;移除碰牌副露&lt;/div&gt;&lt;div&gt;如果是玩家吃則設置需要玩家行為&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="190" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KuYwTaL39QZpws9W_LCt-20" value="加槓" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="490" y="160" width="60" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

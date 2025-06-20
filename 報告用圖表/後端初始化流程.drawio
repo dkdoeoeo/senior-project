@@ -1,0 +1,19 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36" version="26.2.13">
+  <diagram name="第 1 页" id="v2NJ8hG31j2Hv2eVpVof">
+    <mxGraphModel dx="985" dy="512" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e8elQgLsJuaZV0UuGRqt-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="e8elQgLsJuaZV0UuGRqt-2" target="e8elQgLsJuaZV0UuGRqt-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8elQgLsJuaZV0UuGRqt-2" value="game.setRuleName(規則名稱 string,規則tool,模式 int)&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;例:&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;game.setRuleName = (&#39;CrazyGoldHook&#39;,CrazyGoldHookTool,MCD.AI_ONLY)&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="90" width="470" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e8elQgLsJuaZV0UuGRqt-4" value="game.init_game()&lt;div&gt;初始化桌面(&lt;font style=&quot;color: rgb(255, 0, 0);&quot;&gt;重置game_state&lt;/font&gt;、初始牌池、初始手牌)&lt;/div&gt;&lt;div&gt;獲取第一個動作&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="255" y="160" width="300" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

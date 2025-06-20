@@ -1,0 +1,45 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36" version="26.2.13">
+  <diagram name="第 1 页" id="28aMTHYsgjbrapLsHbBo">
+    <mxGraphModel dx="1190" dy="619" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="bet8nDxOGCKYOT4HwSRQ-17" target="bet8nDxOGCKYOT4HwSRQ-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="bet8nDxOGCKYOT4HwSRQ-17" target="bet8nDxOGCKYOT4HwSRQ-22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="95" />
+              <mxPoint x="720" y="555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-17" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(236, 236, 236); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;循環檢查game[&quot;need_human_behavior&quot;]&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="284" y="30" width="260" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="bet8nDxOGCKYOT4HwSRQ-18" target="bet8nDxOGCKYOT4HwSRQ-17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="414" y="480" />
+              <mxPoint x="136" y="480" />
+              <mxPoint x="136" y="95" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-18" value="檢查&lt;div&gt;game.game_state[&quot;human_if_can_open_hand&quot;]&lt;/div&gt;&lt;div&gt;game.game_state[&quot;human_if_can_chow&quot;]&lt;/div&gt;&lt;div&gt;game.game_state[&quot;human_if_can_pong&quot;]&lt;/div&gt;&lt;div&gt;game.game_state[&quot;human_if_can_addkong&quot;]&lt;/div&gt;&lt;div&gt;game.game_state[&quot;human_if_can_kong&quot;]&lt;/div&gt;&lt;div&gt;game.game_state[&quot;human_if_can_concealedKong&quot;]&lt;/div&gt;&lt;div&gt;game.game_state[&quot;human_if_can_selfWho&quot;]&lt;/div&gt;&lt;div&gt;game.game_state[&quot;human_if_can_otherWho&quot;]&lt;/div&gt;&lt;div&gt;並使用game.set_human_behavior(behavior)設置玩家行為&lt;/div&gt;&lt;div&gt;格式:&lt;/div&gt;&lt;div&gt;human_if_can_XXX:{&quot;flag&quot;:True,&quot;sequence&quot;:[[0,0,0],[1,1,1]]}&lt;/div&gt;&lt;div&gt;f&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;lag:是否可以執行該動作&lt;/span&gt;&lt;/div&gt;&lt;div&gt;sequence:可以選擇的組合&lt;/div&gt;&lt;div&gt;behavior:{ &#39;errFlag&#39;:0, &#39;errMsg&#39;:None, &#39;actType&#39;:None, &#39;actMahjong&#39;:None, &#39;sequence&#39;: None }&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="156" y="200" width="516" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-20" value="&lt;font style=&quot;color: rgb(255, 0, 0);&quot;&gt;True&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="354" y="160" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-22" value="使用game.set_human_behavior(behavior)&lt;div&gt;設置玩家行為&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;{ &#39;errFlag&#39;:0, &#39;errMsg&#39;:None, &#39;actType&#39;:None, &#39;actMahjong&#39;:None, &#39;sequence&#39;: None }&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;設置成無動作&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="147" y="520" width="534" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bet8nDxOGCKYOT4HwSRQ-24" value="&lt;font style=&quot;color: rgb(255, 0, 0);&quot;&gt;False&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="600" y="60" width="60" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
