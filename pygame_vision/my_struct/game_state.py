@@ -8,7 +8,7 @@ class Game_state:
         self.dealer = 0
         self.player_wind = [0,1,2,3]
         self.score = [250,250,250,250]
-        self.dora = []
+        self.dora = [0]
         self.uradora = []
         self.open_dora_num =1
         self.current_player = 0

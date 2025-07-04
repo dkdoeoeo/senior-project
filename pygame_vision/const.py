@@ -9,7 +9,10 @@ DISCARD = "discard"
 CHOW = "chow"
 PONG = "pong"
 NONE = "none"
-THRESHOLD = 0.5
+CHOW_THRESHOLD = 0.45
+PONG_THRESHOLD = 0.25
+KONG_THRESHOLD = 0.5
+RIICHI_THRESHOLD = 0.5
 
 #遊戲模式
 AI_ONLY = 1

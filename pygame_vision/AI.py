@@ -9,6 +9,7 @@ import os
 import torch.nn as nn
 from model_define import DiscardCNN
 from model_define import MyCNN
+from model_define import MyGRU
 import my_struct
 
 class MahjongAI():
@@ -36,6 +37,11 @@ class MahjongAI():
         self.riichi_model=torch.load(self.riichi_model_file, weights_only=False).to(device)
         self.riichi_model.eval()
 
+        self.predictor_model_file = 'E:/專題/pygame_vision/models/predictor_model.pth'
+        self.predictor_model=torch.load(self.predictor_model_file, weights_only=False).to(device)
+        self.predictor_model.eval()
+
+        self.last_state = None
 
     def process_draw(self,game_state: my_struct.Game_state,draw_tile:int):#處理自己摸牌
         model_input = self.mahjongHelper.process_model_input(game_state)
@@ -48,13 +54,14 @@ class MahjongAI():
             player_wind=game_state.player_wind[game_state.current_player] == 1
         )
 
-        #if self.mahjongHelper.can_long(game_state["hands"][game_state["current_player"]],draw_tile,config):
-            #return Action(const.SELF_LONG)
+        #if self.mahjongHelper.can_long(game_state.players[game_state.current_player].hand,draw_tile,config):
+            #return Action(const.SELF_LONG,draw_tile)
         
         if self.mahjongHelper.can_kong(game_state.players[game_state.current_player].hand,game_state.players[game_state.current_player].meld,game_state.last_discarded_tile,True):
             kong_point = self.kong_model(model_input)
+            #print("kong分數:",kong_point)
 
-            if kong_point >= const.THRESHOLD:
+            if kong_point >= const.KONG_THRESHOLD:
                 return self.mahjongHelper.best_kong_choice(game_state.players[game_state.current_player].hand,
                                                                  game_state.players[game_state.current_player].meld,
                                                                  game_state.last_discarded_tile,
@@ -62,8 +69,9 @@ class MahjongAI():
 
         if self.mahjongHelper.can_riichi(game_state.players[game_state.current_player].hand,game_state.players[game_state.current_player].meld):
             riichi_point = self.riichi_model(model_input)
+            #print("riichi_point分數:",riichi_point)
 
-            if riichi_point >= const.THRESHOLD:
+            if riichi_point >= const.RIICHI_THRESHOLD:
                 return Action(const.RIICHI)
 
         discard_output = self.discard_model(model_input).float()
@@ -80,7 +88,7 @@ class MahjongAI():
         model_input = self.mahjongHelper.process_model_input(game_state)
         model_input = model_input.to("cuda")
         config = HandConfig(
-            is_tsumo=True,
+            is_tsumo=False,
             is_riichi = (game_state.riichi_info[current_player] == 1),
             round_wind = game_state.dealer,
             player_wind=game_state.player_wind[current_player] == 1
@@ -102,7 +110,12 @@ class MahjongAI():
         if self.mahjongHelper.can_kong(game_state.players[current_player].hand,game_state.players[current_player].meld,game_state.last_discarded_tile,False):
             kong_point = self.kong_model(model_input)
 
-        if chow_point >= const.THRESHOLD or pong_point >= const.THRESHOLD or kong_point >= const.THRESHOLD:
+        #print("吃碰槓分數:")
+        #print("chow_point:",chow_point)
+        #print("pong_point:",pong_point)
+        #print("kong_point:",kong_point)
+
+        if chow_point >= const.CHOW_THRESHOLD or pong_point >= const.PONG_THRESHOLD or kong_point >= const.KONG_THRESHOLD:
             
             if max(chow_point,pong_point,kong_point) == kong_point:
                 return self.mahjongHelper.best_kong_choice(game_state.players[current_player].hand,
@@ -124,3 +137,15 @@ class MahjongAI():
         discard = max(hand_probs, key=hand_probs.get)
 
         return Action(const.DISCARD,discard)
+    
+    def get_predictor_score(self,game_state:my_struct.Game_state):
+        model_input = self.mahjongHelper.process_predictor_input(game_state)
+        model_input = model_input.to("cuda")
+        return self.predictor_model(model_input)
+
+    def _reinforce_discard(self, game_state:my_struct.Game_state):
+        model_input = self.mahjongHelper.process_model_input(game_state)
+        model_input = model_input.to("cuda")
+
+        current_predctor_score = self.predictor_model(model_input).item()
+        

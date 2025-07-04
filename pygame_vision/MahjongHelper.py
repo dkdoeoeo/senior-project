@@ -9,6 +9,7 @@ import torch
 from meld import Meld
 import my_struct
 TilesConverter.string_to_34_array
+
 class MahjongHelper:
     def __init__(self):
         self.calculator = HandCalculator()
@@ -44,7 +45,7 @@ class MahjongHelper:
 
         # 檢查槓後的向聽數是否變大 
         new_hand = [t for t in hand_tiles if t not in action.sequence34]
-        new_shanten = self.calculate_shanten(hand_tiles)
+        new_shanten = self.calculate_shanten(new_hand)
 
         if new_shanten > original_shanten:
             value -= 3  # 槓後胡牌變遠，降低優先度
@@ -118,7 +119,7 @@ class MahjongHelper:
             if (discard + 1) // 9 == suit and (discard + 2) // 9 == suit:
                 chow_candidates.append(Action(const.CHOW,discard,[discard,discard + 1,discard + 2]))
 
-        # 如果沒有可以槓的牌，回傳 None
+        # 如果沒有可以吃的牌，回傳 None
         if not chow_candidates:
             return None
 
@@ -147,99 +148,21 @@ class MahjongHelper:
 
     def process_model_input(self,game_state: my_struct.Game_state):
 
-        def merge_meld(melds:list):
-            meld_list = []
-            for meld in melds:
-                for tile in meld.tiles34:
-                    meld_list.append(tile)
-            return meld_list
-
-        def tileNumberTrans(playerHai):#將136張牌轉換成34種
-            templist = [0] * 34
-            for tile in playerHai:
-                templist[tile] = templist[tile] + 1
-            return templist
-        
-        def decode_34_to_136(Hai_34_List: list):
-            Hai_136_List = [0]*136
-            for i in range(4):
-                for j in range(34):
-                    if(Hai_34_List[j] > 0):
-                        Hai_136_List[i*34+j] = 1
-                        Hai_34_List[j] = Hai_34_List[j] - 1
-            return Hai_136_List
-        
-        def decode_Dora_to_136(Dora_Hai_list: list):
-            Dora_Hai_136_list = [0]*136
-            for dora in Dora_Hai_list:
-                while(Dora_Hai_136_list[dora] == 1):
-                    dora = dora + 34
-                Dora_Hai_136_list[dora] = 1
-            return Dora_Hai_136_list
-        
-        def decode_4playersDis_to_136(game_state: my_struct.Game_state):
-            Discard_Hai_136_list = [0]*136
-            for dis in game_state.players[0].discards:
-                while(Discard_Hai_136_list[dis] == 1):
-                    dis = dis + 34
-                Discard_Hai_136_list[dis] = 1
-            for dis in game_state.players[1].discards:
-                while(Discard_Hai_136_list[dis] == 1):
-                    dis = dis + 34
-                Discard_Hai_136_list[dis] = 1
-            for dis in game_state.players[2].discards:
-                while(Discard_Hai_136_list[dis] == 1):
-                    dis = dis + 34
-                Discard_Hai_136_list[dis] = 1
-            for dis in game_state.players[3].discards:
-                while(Discard_Hai_136_list[dis] == 1):
-                    dis = dis + 34
-                Discard_Hai_136_list[dis] = 1
-            return Discard_Hai_136_list
-
-        def decode_score_to_34(score: int):
-            score_34 = [0]*34
-            index = int(score/20)
-            if index < 0:
-                index = 0
-            elif index >=34:
-                index = 33
-            score_34[index] = 1
-            return score_34
-
-        def decode_rounds_to_34(round:int):
-            rounds_34 = [0]*34
-            index = int((69 - round)/2)
-            if index > 33:
-                index = 33
-            rounds_34[index] = 1
-            return rounds_34
-        
-        def decode_score_to_34(score: int):
-            score_34 = [0]*34
-            index = int(score/20)
-            if index < 0:
-                index = 0
-            elif index >=34:
-                index = 33
-            score_34[index] = 1
-            return score_34
-
-        self_Hai_34_List = tileNumberTrans(game_state.players[game_state.current_player].hand)
-        right_Hai_34_list = tileNumberTrans(merge_meld(game_state.players[(game_state.current_player + 1) % 4].meld))
-        Opposite_Hai_34_list = tileNumberTrans(merge_meld(game_state.players[(game_state.current_player + 2) % 4].meld))
-        Left_Hai_34_list = tileNumberTrans(merge_meld(game_state.players[(game_state.current_player + 3) % 4].meld))
-        self_Hai_136_List = decode_34_to_136(self_Hai_34_List)
-        right_Hai_136_List = decode_34_to_136(right_Hai_34_list)
-        Opposite_Hai_136_List = decode_34_to_136(Opposite_Hai_34_list)
-        Left_Hai_136_list = decode_34_to_136(Left_Hai_34_list)
-        Dora_Hai_136_list = decode_Dora_to_136(game_state.dora)
-        Discard_Hai_136_list = decode_4playersDis_to_136(game_state)
-        rounds_34_list = decode_rounds_to_34(game_state.round)
-        self_score_34_List = decode_score_to_34(game_state.score[game_state.current_player])
-        right_score_34_List = decode_score_to_34(game_state.score[(game_state.current_player + 1) % 4])
-        Opposite_score_34_List = decode_score_to_34(game_state.score[(game_state.current_player + 2) % 4])
-        Left_score_34_List = decode_score_to_34(game_state.score[(game_state.current_player + 3) % 4])
+        self_Hai_34_List = self.tileNumberTrans(game_state.players[game_state.current_player].hand)
+        right_Hai_34_list = self.tileNumberTrans(self.merge_meld(game_state.players[(game_state.current_player + 1) % 4].meld))
+        Opposite_Hai_34_list = self.tileNumberTrans(self.merge_meld(game_state.players[(game_state.current_player + 2) % 4].meld))
+        Left_Hai_34_list = self.tileNumberTrans(self.merge_meld(game_state.players[(game_state.current_player + 3) % 4].meld))
+        self_Hai_136_List = self.decode_34_to_136(self_Hai_34_List)
+        right_Hai_136_List = self.decode_34_to_136(right_Hai_34_list)
+        Opposite_Hai_136_List = self.decode_34_to_136(Opposite_Hai_34_list)
+        Left_Hai_136_list = self.decode_34_to_136(Left_Hai_34_list)
+        Dora_Hai_136_list = self.decode_Dora_to_136(game_state.dora,game_state.open_dora_num)
+        Discard_Hai_136_list = self.decode_4playersDis_to_136(game_state)
+        rounds_34_list = self.decode_rounds_to_34(game_state.round)
+        self_score_34_List = self.decode_score_to_34(game_state.score[game_state.current_player])
+        right_score_34_List = self.decode_score_to_34(game_state.score[(game_state.current_player + 1) % 4])
+        Opposite_score_34_List = self.decode_score_to_34(game_state.score[(game_state.current_player + 2) % 4])
+        Left_score_34_List = self.decode_score_to_34(game_state.score[(game_state.current_player + 3) % 4])
 
         feature_maps = np.array([
             self_Hai_136_List[0:34],
@@ -275,9 +198,149 @@ class MahjongHelper:
 
         return torch.tensor(feature_maps,dtype=torch.float32)
     
+    def process_predictor_input(self,game_state: my_struct.Game_state):
 
+        self_Hai_34_List = self.tileNumberTrans(game_state.players[game_state.current_player].hand)
+        self_discard_34_List = self.tileNumberTrans(game_state.players[game_state.current_player].discards)
+        self_score = game_state.score[game_state.current_player]
+        self_riichi_info = game_state.riichi_info[game_state.current_player]
+        
+        right_Hai_34_List = self.tileNumberTrans(game_state.players[(game_state.current_player + 1) % 4].hand)
+        right_discard_34_List = self.tileNumberTrans(game_state.players[(game_state.current_player + 1) % 4].discards)
+        right_score = game_state.score[(game_state.current_player + 1) % 4]
+        right_riichi_info = game_state.riichi_info[(game_state.current_player + 1) % 4]
+
+        opposite_Hai_34_List = self.tileNumberTrans(game_state.players[(game_state.current_player + 2) % 4].hand)
+        opposite_discard_34_List = self.tileNumberTrans(game_state.players[(game_state.current_player + 2) % 4].discards)
+        opposite_score = game_state.score[(game_state.current_player + 2) % 4]
+        opposite_riichi_info = game_state.riichi_info[(game_state.current_player + 2) % 4]
+
+        left_Hai_34_List = self.tileNumberTrans(game_state.players[(game_state.current_player + 3) % 4].hand)
+        left_discard_34_List = self.tileNumberTrans(game_state.players[(game_state.current_player + 3) % 4].discards)
+        left_score = game_state.score[(game_state.current_player + 3) % 4]
+        left_riichi_info = game_state.riichi_info[(game_state.current_player + 3) % 4]
+
+        dora_5_list = self.decode_Dora_to_5(game_state.dora,game_state.open_dora_num)
+
+        feature_maps = np.array([
+            0,#場風一律為東風
+            game_state.player_wind[game_state.current_player],
+            game_state.round
+        ])
+
+        feature_maps = np.append(feature_maps,self_Hai_34_List)
+        feature_maps = np.append(feature_maps,self_discard_34_List)
+        feature_maps = np.append(feature_maps,self_score)
+
+        feature_maps = np.append(feature_maps,right_Hai_34_List)
+        feature_maps = np.append(feature_maps,right_discard_34_List)
+        feature_maps = np.append(feature_maps,right_score)
+
+        feature_maps = np.append(feature_maps,opposite_Hai_34_List)
+        feature_maps = np.append(feature_maps,opposite_discard_34_List)
+        feature_maps = np.append(feature_maps,opposite_score)
+
+        feature_maps = np.append(feature_maps,left_Hai_34_List)
+        feature_maps = np.append(feature_maps,left_discard_34_List)
+        feature_maps = np.append(feature_maps,left_score)
+
+        feature_maps = np.append(feature_maps,self_riichi_info)
+        feature_maps = np.append(feature_maps,right_riichi_info)
+        feature_maps = np.append(feature_maps,opposite_riichi_info)
+        feature_maps = np.append(feature_maps,left_riichi_info)
+
+        feature_maps = np.append(feature_maps,dora_5_list)
+
+        return torch.tensor(feature_maps,dtype=torch.float32).unsqueeze(0)
+    
+    #game_state轉換成模型輸入用函數
+    def merge_meld(self,melds:list):
+            meld_list = []
+            for meld in melds:
+                for tile in meld.tiles34:
+                    meld_list.append(tile)
+            return meld_list
+
+    def tileNumberTrans(self,playerHai):#將136張牌轉換成34種
+        templist = [0] * 34
+        for tile in playerHai:
+            templist[tile] = templist[tile] + 1
+        return templist
+    
+    def decode_34_to_136(self,Hai_34_List: list):
+        Hai_136_List = [0]*136
+        for i in range(4):
+            for j in range(34):
+                if(Hai_34_List[j] > 0):
+                    Hai_136_List[i*34+j] = 1
+                    Hai_34_List[j] = Hai_34_List[j] - 1
+        return Hai_136_List
+    
+    def decode_Dora_to_136(self,Dora_Hai_list: list, open_dora_num:int):
+        Dora_Hai_136_list = [0]*136
+        for i in range(open_dora_num):
+            dora = Dora_Hai_list[i]
+            while(Dora_Hai_136_list[dora] == 1):
+                dora = dora + 34
+            Dora_Hai_136_list[dora] = 1
+        return Dora_Hai_136_list
+    
+    def decode_Dora_to_5(self,Dora_Hai_list: list, open_dora_num:int):
+        Dora_Hai_5_list = [-1]*5
+        for i in range(open_dora_num):
+            Dora_Hai_5_list[i] = Dora_Hai_list[i]
+        return Dora_Hai_5_list
+    
+    def decode_4playersDis_to_136(self,game_state: my_struct.Game_state):
+        Discard_Hai_136_list = [0]*136
+        for dis in game_state.players[0].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        for dis in game_state.players[1].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        for dis in game_state.players[2].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        for dis in game_state.players[3].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        return Discard_Hai_136_list
+
+    def decode_score_to_34(self,score: int):
+        score_34 = [0]*34
+        index = int(score/20)
+        if index < 0:
+            index = 0
+        elif index >=34:
+            index = 33
+        score_34[index] = 1
+        return score_34
+
+    def decode_rounds_to_34(self,round:int):
+        rounds_34 = [0]*34
+        index = int((69 - round)/2)
+        if index > 33:
+            index = 33
+        rounds_34[index] = 1
+        return rounds_34
+    
+    def decode_score_to_34(self,score: int):
+        score_34 = [0]*34
+        index = int(score/20)
+        if index < 0:
+            index = 0
+        elif index >=34:
+            index = 33
+        score_34[index] = 1
+        return score_34
+    
 if __name__ == "__main__":
     test = MahjongHelper()
-    tiles = TilesConverter.to_34_array([4,5,12,13,14,44,45,46,52,56,60,84,85,86])
-    result = test.shanten_calculator.calculate_shanten(tiles)
-    print(result)
+    tiles = [4, 5, 7, 10, 16, 20, 21, 22, 22, 24]
+    result = test.best_chow_choice(tiles,23)
+    print(result.sequence34)

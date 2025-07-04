@@ -7,6 +7,7 @@ import time
 import keyboard
 from model_define import DiscardCNN
 from model_define import MyCNN
+from model_define import MyGRU
 import my_struct
 
 class Game():
@@ -125,7 +126,7 @@ class Game():
             self.game_state.players[current_player].hand.remove(new_meld.tiles34[0])
             self.game_state.players[current_player].hand.remove(new_meld.tiles34[1])
             self.game_state.players[current_player].hand.remove(new_meld.tiles34[2])
-            self.game_state.players[current_player].hand.append(new_meld)
+            self.game_state.players[current_player].meld.append(new_meld)
         elif self.game_state.player_behavior.type == const.ADD_KONG:
             if self.game_state.open_dora_num < 5:
                 self.game_state.open_dora_num += 1
@@ -245,6 +246,7 @@ class Game():
             print("meld:", end=" ")
             for meld in self.game_state.players[player].meld:
                 print(meld.type,meld.tiles34,end = " ")
+            print("")
 
         print("")
         print("last_discarded_tile:",self.game_state.last_discarded_tile) 

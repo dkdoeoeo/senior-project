@@ -1,15 +1,6 @@
 import torch.nn as nn
 import torch
 
-num_epochs = 10
-batch_size = 32
-best_accuracy = 0
-input_size=288
-hidden_size=64
-num_layers=2
-num_classes =1
-sequence_length =1
-
 class DiscardCNN(nn.Module):
     def __init__(self, num_layers = 10, input_features=34, input_channels=29, output_features=34):
         super(MyCNN, self).__init__()
@@ -78,7 +69,7 @@ class MyCNN(nn.Module):
         return x.squeeze(1)
 
 class MyGRU(nn.Module):
-    def __init__(self, input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, num_classes=num_classes, sequence_length=sequence_length):
+    def __init__(self, input_size=288, hidden_size=64, num_layers=2, num_classes=1, sequence_length=1):
         super(MyGRU, self).__init__()
         self.hidden_size  = hidden_size
         self.num_layers = num_layers
@@ -89,7 +80,7 @@ class MyGRU(nn.Module):
     
     def forward(self, x):
         x = x.unsqueeze(1)
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to("cuda")
         out,_ = self.gru(x, h0)
         out = out[:, -1, :]  # 取最後一個時間步的輸出
         out = self.fc1(out)
