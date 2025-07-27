@@ -17,6 +17,8 @@ class Game():
         self.mahjong_AIs = [MahjongAI(),MahjongAI(),MahjongAI(),MahjongAI()]
         self.game_mode = const.AI_ONLY
         self.is_game_running = True
+        self.RL_flag = False
+        self.last_predctor_score = 0
     
     def init_game(self,game_mode = const.AI_ONLY):
         self.generate_wall()
@@ -31,6 +33,8 @@ class Game():
     
     def draw_tiles(self):
         self.game_state.round += 1
+        if len(self.game_state.wall) == 1:
+            self.game_state.game_over = True
         return self.game_state.wall.pop(0)
 
     def generate_wall(self):
@@ -95,7 +99,8 @@ class Game():
     def get_self_draw_player_action(self,draw_tile:int):
         current_player = self.game_state.current_player
         cur_AI = self.mahjong_AIs[current_player]
-        return cur_AI.process_draw(self.game_state,draw_tile)
+        RL_flag = self.game_state.current_player == 0
+        return cur_AI.process_draw(self.game_state,draw_tile,RL_flag)
 
     def get_other_discard_player_action(self):
         current_player = self.game_state.current_player
@@ -105,7 +110,8 @@ class Game():
     def get_just_discard_player_action(self):
         current_player = self.game_state.current_player
         cur_AI = self.mahjong_AIs[current_player]
-        return cur_AI.just_discard(self.game_state)
+        RL_flag = self.game_state.current_player == 0
+        return cur_AI.just_discard(self.game_state,RL_flag)
     
     def process_player_actions(self):
         if not self.is_game_running:
@@ -182,6 +188,11 @@ class Game():
             return
         
         current_player = self.game_state.current_player
+
+        #強化學習區塊
+        if current_player == 0:
+            self.mahjong_AIs[current_player].store_transition(self.game_state)
+            self.mahjong_AIs[current_player].train_from_buffer()
 
         if self.game_state.player_behavior.type == const.CHOW:
             self.game_state.player_behavior = self.get_just_discard_player_action()

@@ -14,7 +14,7 @@ class DiscardCNN(nn.Module):
         
         self.conv_layers.append(nn.Conv1d(in_channels=256, out_channels=1, kernel_size=1, padding=0))
         
-        self.activation = nn.LeakyReLU(negative_slope=0.01)
+        self.activation = nn.LeakyReLU(negative_slope=0.01, inplace=False)
 
         self.fc = nn.Linear(input_features, output_features)
     def forward(self, x):
@@ -28,7 +28,8 @@ class DiscardCNN(nn.Module):
                 x = conv(x)
                 
         x = x.squeeze(1)
-        x = self.fc(x).squeeze(0)
+        x = self.fc(x)
+        x = x.squeeze(0)
         #print("x.shape:",x.shape)
         
         return x
@@ -64,7 +65,6 @@ class MyCNN(nn.Module):
         x = x.squeeze(1)
         x = self.fc(x)
         x = self.sigmoid(x)
-        print("x.shape:",x.shape)
         
         return x.squeeze(1)
 
