@@ -13,36 +13,37 @@ from model_define import MyCNN
 from model_define import MyGRU
 import my_struct
 import time
+from discard_model_validator import Discard_model_validator
 torch.autograd.set_detect_anomaly(True)
 
 
 class MahjongAI():
     def __init__(self,buffer_capacity=10000, batch_size = 2):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.mahjongHelper = MahjongHelper()
         
         self.discard_model_file = 'E:/專題/pygame_vision/models/discard_model.pth'
-        self.discard_model=torch.load(self.discard_model_file, weights_only=False).to(device)
+        self.discard_model=torch.load(self.discard_model_file, weights_only=False).to(self.device)
         self.discard_model.eval()
 
         self.pung_model_file = 'E:/專題/pygame_vision/models/pung_model.pth'
-        self.pung_model=torch.load(self.pung_model_file, weights_only=False).to(device)
+        self.pung_model=torch.load(self.pung_model_file, weights_only=False).to(self.device)
         self.pung_model.eval()
 
         self.chow_model_file = 'E:/專題/pygame_vision/models/chow_model.pth'
-        self.chow_model=torch.load(self.chow_model_file, weights_only=False).to(device)
+        self.chow_model=torch.load(self.chow_model_file, weights_only=False).to(self.device)
         self.chow_model.eval()
 
         self.kong_model_file = 'E:/專題/pygame_vision/models/kong_model.pth'
-        self.kong_model=torch.load(self.kong_model_file, weights_only=False).to(device)
+        self.kong_model=torch.load(self.kong_model_file, weights_only=False).to(self.device)
         self.kong_model.eval()
 
         self.riichi_model_file = 'E:/專題/pygame_vision/models/riichi_model.pth'
-        self.riichi_model=torch.load(self.riichi_model_file, weights_only=False).to(device)
+        self.riichi_model=torch.load(self.riichi_model_file, weights_only=False).to(self.device)
         self.riichi_model.eval()
 
         self.predictor_model_file = 'E:/專題/pygame_vision/models/predictor_model.pth'
-        self.predictor_model=torch.load(self.predictor_model_file, weights_only=False).to(device)
+        self.predictor_model=torch.load(self.predictor_model_file, weights_only=False).to(self.device)
         self.predictor_model.eval()
         for param in self.predictor_model.parameters():
             param.requires_grad = False
@@ -62,6 +63,9 @@ class MahjongAI():
 
         self.start_time = time.time()
         self.last_saved_time = self.start_time
+        self.time_interval = 5
+
+        self.best_model_path = 'E:/專題/discard_model/RL/best_model.pth'
 
     def process_draw(self,game_state:my_struct.Game_state,draw_tile:int, RL_flag = False): #處理自己摸牌
         model_input = self.mahjongHelper.process_model_input(game_state)
@@ -212,7 +216,7 @@ class MahjongAI():
     def train_from_buffer(self, beta=0.01):
         if len(self.buffer) < self.batch_size:
             return
-        
+
         self.discard_model.train()
         batch = self.buffer.sample(self.batch_size)
 
@@ -248,11 +252,18 @@ class MahjongAI():
         self.optimizer.step()
 
         current_time = time.time()
-        if current_time - self.last_saved_time >= 21600:
+        if current_time - self.last_saved_time >= self.time_interval:
             timestamp = time.strftime("%Y%m%d_%H%M%S", time.localtime(current_time))
             model_path = f'E:/專題/discard_model/RL/CNN_discard_model_{timestamp}.pth'
             torch.save(self.discard_model, model_path)
             self.last_saved_time = current_time
             print(f'模型已基於時間間隔存儲，時間: {timestamp}')
+
+            discard_model_validator = Discard_model_validator(model_path, best_model_path = self.discard_model_file)
+            discard_model_validator.run()
+
+            if os.path.exists(self.best_model_path):
+                self.discard_model=torch.load(self.best_model_path, weights_only=False).to(self.device)
+                print(f"[AI] 已切換至最佳模型 {self.best_model_path}")
         
         self.discard_model.eval()

@@ -1,5 +1,7 @@
 import torch.nn as nn
 import torch
+from torch.utils.data import Dataset, DataLoader
+import pandas as pd
 
 class DiscardCNN(nn.Module):
     def __init__(self, num_layers = 10, input_features=34, input_channels=29, output_features=34):
@@ -86,3 +88,34 @@ class MyGRU(nn.Module):
         out = self.fc1(out)
         out = self.fc2(out)
         return out
+    
+class MyDataset(Dataset):
+    def __init__(self, file_path, chunk_size):
+        self.file_path = file_path
+        self.chunk_size = chunk_size
+        
+        self.columns = pd.read_csv(self.file_path, nrows=0).columns.str.strip().str.replace('\xa0', ' ').tolist()
+        self.train_columns = [col for col in self.columns if col != 'discard']  # 排除 'discard' 欄位
+        self.num_samples = sum(1 for _ in open(self.file_path, encoding='utf-8')) - 1  # 計算總樣本數
+        
+    def __getitem__(self, idx):
+        chunk_start = idx // self.chunk_size * self.chunk_size
+        df = pd.read_csv(self.file_path, skiprows=chunk_start + 1, nrows=self.chunk_size, header=None, encoding='utf-8')  # 跳過標題和之前的行
+
+        df.columns = self.columns
+        
+        if 'discard' not in df.columns:
+            raise KeyError(f"Chunk starting at row {chunk_start + 1} does not contain 'Discard' column.")
+        
+            
+        sample_idx = idx % self.chunk_size
+        
+        train_data = df[self.train_columns].iloc[sample_idx].values.astype("float32")
+        train_data = train_data.reshape(34, 29)
+        
+        value_data = df['discard'].iloc[sample_idx]  # 提取 'Discard' 欄位
+        
+        return torch.tensor(train_data, dtype=torch.float32), torch.tensor(value_data, dtype=torch.long)
+        
+    def __len__(self):
+        return self.num_samples
