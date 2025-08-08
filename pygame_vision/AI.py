@@ -18,7 +18,7 @@ torch.autograd.set_detect_anomaly(True)
 
 
 class MahjongAI():
-    def __init__(self,buffer_capacity=10000, batch_size = 2):
+    def __init__(self,buffer_capacity=300, batch_size = 128):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.mahjongHelper = MahjongHelper()
         
@@ -63,7 +63,7 @@ class MahjongAI():
 
         self.start_time = time.time()
         self.last_saved_time = self.start_time
-        self.time_interval = 5
+        self.time_interval = 7200
 
         self.best_model_path = 'E:/專題/discard_model/RL/best_model.pth'
 
@@ -101,10 +101,23 @@ class MahjongAI():
         if RL_flag:
             return self._reinforce_discard(game_state)
         
+        model_input = model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
+        model_input = model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
         discard_output = self.discard_model(model_input).float()
-        discard_probabilities = F.softmax(discard_output, dim=0)
-        hand_probs = {tile: discard_probabilities[tile].item() for tile in game_state.players[game_state.current_player].hand}
-        discard = max(hand_probs, key=hand_probs.get)
+        discard_output = discard_output.squeeze(0)
+
+        hand_tiles = game_state.players[game_state.current_player].hand
+        hand_tile_indices = torch.tensor(hand_tiles, device="cuda")
+
+        legal_logits  = discard_output[hand_tile_indices]
+        legal_probs = F.softmax(legal_logits, dim=0)
+        m = torch.distributions.Categorical(legal_probs)
+        sampled_idx = m.sample()
+        discard = hand_tile_indices[sampled_idx].item()
+
+        #print("discard_output:", discard_output)
+        #print("hand_tile_indices:", hand_tile_indices)
+        #print("legal_probs:", legal_probs)
 
         return Action(const.DISCARD,discard)
 
@@ -161,10 +174,23 @@ class MahjongAI():
         
         model_input = self.mahjongHelper.process_model_input(game_state)
         model_input = model_input.to("cuda")
+        model_input = model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
+        model_input = model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
         discard_output = self.discard_model(model_input).float()
-        discard_probabilities = F.softmax(discard_output, dim=0)
-        hand_probs = {tile: discard_probabilities[tile].item() for tile in game_state.players[game_state.current_player].hand}
-        discard = max(hand_probs, key=hand_probs.get)
+        discard_output = discard_output.squeeze(0)
+
+        hand_tiles = game_state.players[game_state.current_player].hand
+        hand_tile_indices = torch.tensor(hand_tiles, device="cuda")
+
+        legal_logits  = discard_output[hand_tile_indices]
+        legal_probs = F.softmax(legal_logits, dim=0)
+        m = torch.distributions.Categorical(legal_probs)
+        sampled_idx = m.sample()
+        discard = hand_tile_indices[sampled_idx].item()
+
+        #print("discard_output:", discard_output)
+        #print("hand_tile_indices:", hand_tile_indices)
+        #print("legal_probs:", legal_probs)
 
         return Action(const.DISCARD,discard)
     
@@ -177,13 +203,21 @@ class MahjongAI():
     def _reinforce_discard(self, game_state:my_struct.Game_state):
 
         model_input = self.mahjongHelper.process_model_input(game_state).clone().detach().to("cuda")
+        model_input = model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
+        model_input = model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
         discard_output = self.discard_model(model_input).float()
-        discard_probabilities = F.softmax(discard_output, dim=0)
+        discard_output = discard_output.squeeze(0)
 
         hand_tiles = game_state.players[game_state.current_player].hand
         hand_tile_indices = torch.tensor(hand_tiles, device="cuda")
 
-        legal_probs = discard_probabilities[hand_tile_indices]
+        legal_logits  = discard_output[hand_tile_indices]
+        legal_probs = F.softmax(legal_logits, dim=0)
+
+        #print("discard_output:", discard_output)
+        #print("hand_tile_indices:", hand_tile_indices)
+        #print("legal_probs:", legal_probs)
+        
         m = torch.distributions.Categorical(legal_probs)
         sampled_idx = m.sample()
         log_prob = m.log_prob(sampled_idx)
@@ -214,30 +248,32 @@ class MahjongAI():
         self.pending_transition = None
 
     def train_from_buffer(self, beta=0.01):
-        if len(self.buffer) < self.batch_size:
+        if len(self.buffer) < self.buffer.capacity:
             return
 
+        #print("開始訓練")
         self.discard_model.train()
         batch = self.buffer.sample(self.batch_size)
 
-        states = torch.stack([t.state for t in batch])
+        states = torch.stack([t.state for t in batch]).squeeze(2)
         discards = torch.tensor([t.discard for t in batch], device="cuda")
         rewards = torch.tensor([t.next_score - t.current_score for t in batch], dtype=torch.float32, device="cuda")
         legal_indices_list = [t.legal_indices for t in batch]
 
         #模型重新 forward
-        discard_outputs = self.discard_model(states).float()
-        discard_probabilities = F.softmax(discard_outputs, dim=0)
-
         log_probs = []
         entropies = []
 
+        discard_outputs = self.discard_model(states).float()
+
         for i, legal_indices in enumerate(legal_indices_list):
-            legal_probs = discard_probabilities[i][legal_indices]
+            legal_logits  = discard_outputs[i][legal_indices]
+            legal_probs = F.softmax(legal_logits, dim=0)
             m = torch.distributions.Categorical(legal_probs)
             action_idx = discards[i]
             log_probs.append(m.log_prob(torch.tensor(action_idx, device="cuda")))
             entropies.append(m.entropy())
+        
         log_probs = torch.stack(log_probs)
         entropies = torch.stack(entropies)
 
@@ -257,13 +293,14 @@ class MahjongAI():
             model_path = f'E:/專題/discard_model/RL/CNN_discard_model_{timestamp}.pth'
             torch.save(self.discard_model, model_path)
             self.last_saved_time = current_time
-            print(f'模型已基於時間間隔存儲，時間: {timestamp}')
+            #print(f'模型已基於時間間隔存儲，時間: {timestamp}')
 
             discard_model_validator = Discard_model_validator(model_path, best_model_path = self.discard_model_file)
-            discard_model_validator.run()
+            discard_model_validator.start()
 
             if os.path.exists(self.best_model_path):
                 self.discard_model=torch.load(self.best_model_path, weights_only=False).to(self.device)
-                print(f"[AI] 已切換至最佳模型 {self.best_model_path}")
+                #print(f"[AI] 已切換至最佳模型 {self.best_model_path}")
         
         self.discard_model.eval()
+        #print("結束訓練")

@@ -20,8 +20,8 @@ class DiscardCNN(nn.Module):
 
         self.fc = nn.Linear(input_features, output_features)
     def forward(self, x):
-        if x.dim() == 2:  # 如果輸入只有 (input_features, input_channels)
-            x = x.unsqueeze(0)  # 變成 (1, input_features, input_channels)
+        x = x.squeeze(1)
+        x = x.permute(0, 2, 1)
 
         for i, conv in enumerate(self.conv_layers):
             if(i < len(self.conv_layers) - 1):
@@ -31,11 +31,8 @@ class DiscardCNN(nn.Module):
                 
         x = x.squeeze(1)
         x = self.fc(x)
-        x = x.squeeze(0)
-        #print("x.shape:",x.shape)
         
         return x
-
 class MyCNN(nn.Module):
     def __init__(self, num_layers = 10, input_features=34, input_channels=29, output_features=1):
         super(MyCNN, self).__init__()

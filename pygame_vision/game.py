@@ -12,15 +12,15 @@ import my_struct
 
 class Game():
     def __init__(self):
-        self.game_state = my_struct.Game_state()
 
         self.mahjong_AIs = [MahjongAI(),MahjongAI(),MahjongAI(),MahjongAI()]
         self.game_mode = const.AI_ONLY
-        self.is_game_running = True
         self.RL_flag = False
         self.last_predctor_score = 0
     
     def init_game(self,game_mode = const.AI_ONLY):
+        self.is_game_running = True
+        self.game_state = my_struct.Game_state()
         self.generate_wall()
         self.deal_tiles()
         self.deal_dora()
@@ -31,6 +31,10 @@ class Game():
         self.sort_hands_list()
         self.game_state.player_behavior = self.get_self_draw_player_action(draw_tile)
     
+    def check_ryukyoku(self):
+        if len(self.game_state.wall) == 0:
+            return True
+
     def draw_tiles(self):
         self.game_state.round += 1
         if len(self.game_state.wall) == 1:
@@ -199,16 +203,29 @@ class Game():
         elif self.game_state.player_behavior.type == const.PONG:
             self.game_state.player_behavior = self.get_just_discard_player_action()
         elif self.game_state.player_behavior.type == const.ADD_KONG:
+
+            if self.check_ryukyoku():
+                self.game_state.game_over = True
+                return
+            
             draw_tile = self.draw_tiles()
             self.game_state.players[current_player].hand.append(draw_tile)
             self.sort_hands_list()
             self.game_state.player_behavior = self.get_self_draw_player_action(draw_tile)
         elif self.game_state.player_behavior.type == const.KONG:
+            if self.check_ryukyoku():
+                self.game_state.game_over = True
+                return
+            
             draw_tile = self.draw_tiles()
             self.game_state.players[current_player].hand.append(draw_tile)
             self.sort_hands_list()
             self.game_state.player_behavior = self.get_self_draw_player_action(draw_tile)
         elif self.game_state.player_behavior.type == const.CONCEALED_KONG:
+            if self.check_ryukyoku():
+                self.game_state.game_over = True
+                return
+            
             draw_tile = self.draw_tiles()
             self.game_state.players[current_player].hand.append(draw_tile)
             self.sort_hands_list()
@@ -221,15 +238,20 @@ class Game():
                 self.game_state.current_player = (current_player + position_offset) % 4
             else:
                 self.next_player()
+                if self.check_ryukyoku():
+                    self.game_state.game_over = True
+                    return
+            
                 draw_tile = self.draw_tiles()
                 self.game_state.players[self.game_state.current_player].hand.append(draw_tile)
                 self.sort_hands_list()
                 self.game_state.player_behavior = self.get_self_draw_player_action(draw_tile)
         elif self.game_state.player_behavior.type == const.RIICHI:
-            draw_tile = self.draw_tiles()
-            self.game_state.players[current_player].hand.append(draw_tile)
-            self.sort_hands_list()
-            self.game_state.player_behavior = self.get_self_draw_player_action(draw_tile)
+            if self.check_ryukyoku():
+                self.game_state.game_over = True
+                return
+            
+            self.game_state.player_behavior = self.get_just_discard_player_action()
     
     def start_game_loop(self):#這後端測試用
         while not self.game_state.game_over:
