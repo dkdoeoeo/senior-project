@@ -1,0 +1,56 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" version="28.0.7">
+  <diagram name="第 1 页" id="VWCsTdeQ8Tj-Na0nY449">
+    <mxGraphModel dx="1426" dy="743" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_Bzt_F_EUlDs55WCUm18-2" target="_Bzt_F_EUlDs55WCUm18-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_Bzt_F_EUlDs55WCUm18-2" target="_Bzt_F_EUlDs55WCUm18-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-2" value="是否啟動防守模式" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="140" width="166" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_Bzt_F_EUlDs55WCUm18-5" target="_Bzt_F_EUlDs55WCUm18-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-5" value="根據牌種安全度表&lt;br&gt;對其他三位玩家&lt;div&gt;計算手牌安全度&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="344.5" y="250" width="197" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_Bzt_F_EUlDs55WCUm18-7" target="_Bzt_F_EUlDs55WCUm18-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-7" value="合併三份手牌安全度" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="369.5" y="340" width="147" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_Bzt_F_EUlDs55WCUm18-9" target="_Bzt_F_EUlDs55WCUm18-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-9" value="AI決定棄牌" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="384.5" y="60" width="117" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_Bzt_F_EUlDs55WCUm18-11" target="_Bzt_F_EUlDs55WCUm18-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-11" value="回傳最安全的牌當棄牌" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="359" y="410" width="167" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-13" value="棄牌結束" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="390" y="480" width="106" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="_Bzt_F_EUlDs55WCUm18-15" target="_Bzt_F_EUlDs55WCUm18-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="260" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_Bzt_F_EUlDs55WCUm18-15" value="使用棄牌模型" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="300" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

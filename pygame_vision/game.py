@@ -17,6 +17,8 @@ class Game():
         self.game_mode = const.AI_ONLY
         self.RL_flag = False
         self.last_predctor_score = 0
+        self.ai_win_times = [0,0,0,0]
+        self.train_times = 0
     
     def init_game(self,game_mode = const.AI_ONLY):
         self.is_game_running = True
@@ -182,9 +184,11 @@ class Game():
             self.game_state.riichi_info[current_player] = True
         
         elif self.game_state.player_behavior.type == const.SELF_LONG:
+            self.ai_win_times[current_player] += 1
             self.game_state.game_over = True
         
         elif self.game_state.player_behavior.type == const.OTHER_LONG:
+            self.ai_win_times[current_player] += 1
             self.game_state.game_over = True
     
     def get_next_player_behavior(self):
@@ -196,7 +200,7 @@ class Game():
         #強化學習區塊
         if current_player == 0:
             self.mahjong_AIs[current_player].store_transition(self.game_state)
-            self.mahjong_AIs[current_player].train_from_buffer()
+            self.train_times = self.mahjong_AIs[current_player].train_from_buffer(self.train_times)
 
         if self.game_state.player_behavior.type == const.CHOW:
             self.game_state.player_behavior = self.get_just_discard_player_action()

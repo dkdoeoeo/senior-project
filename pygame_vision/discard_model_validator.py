@@ -92,7 +92,7 @@ class Discard_model_validator(threading.Thread):
                 writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.model_path, accuracy])
 
             # 檢查是否需要更新最佳模型
-            best_acc = 43.3
+            best_acc = 0
             if os.path.exists(self.log_file):
                 with open(self.log_file, "r") as f:
                     for row in csv.reader(f):
@@ -104,6 +104,12 @@ class Discard_model_validator(threading.Thread):
             if accuracy >= best_acc:
                 torch.save(model, self.best_model_path)
                 print(f"[Validator] 新最佳模型，準確率 {accuracy:.2%}，已更新 {self.best_model_path}")
+
+            #保證最低正確率
+            low_acc = 20
+            if accuracy < low_acc:
+                return True
+            return False
         
         except Exception as e:
             print(f"驗證執行緒錯誤：{e}")

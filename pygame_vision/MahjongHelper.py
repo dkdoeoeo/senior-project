@@ -1,6 +1,7 @@
 from mahjong.shanten import Shanten
 from mahjong.hand_calculating.hand import HandCalculator
 from mahjong.tile import TilesConverter
+from mahjong.agari import Agari
 from my_struct.action import Action
 import const
 from mahjong.hand_calculating.hand_config import HandConfig
@@ -15,13 +16,17 @@ class MahjongHelper:
         self.calculator = HandCalculator()
         self.shanten_calculator = Shanten()
     
-    def can_long(self, hand_tiles, win_tile, config):
-        result = self.calculator.estimate_hand_value( 
-            tiles=hand_tiles,        # 手牌
-            win_tile=win_tile,       # 和牌
-            config=config            # 設定 (場風、自風等))
-            )
-        return result.yaku is not None
+    def can_long(self, hand_tiles, melds):
+        agari = Agari()
+        hand_copy = hand_tiles.copy()
+        input_melds = []
+
+        for meld in melds:
+            hand_copy.extend(meld.tiles34)
+            input_melds.append(meld.tiles34)
+
+        input_hand = self.decode_to_tile34(hand_copy)
+        return agari.is_agari(input_hand, input_melds)
     
     def can_kong(self, hand_tiles, melds, tile, if_self_round):
         if if_self_round and hand_tiles.count(tile) == 4:#暗槓
@@ -37,8 +42,7 @@ class MahjongHelper:
         return False
 
     def calculate_shanten(self,hand_tiles):
-        shanten = Shanten()
-        return shanten.calculate_shanten(self.decode_to_tile34(hand_tiles))
+        return self.shanten_calculator.calculate_shanten(self.decode_to_tile34(hand_tiles))
     
     def calculate_value(self,original_shanten: int,hand_tiles:list ,action:Action):
         value = 0
