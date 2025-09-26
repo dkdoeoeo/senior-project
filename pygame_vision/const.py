@@ -15,7 +15,8 @@ KONG_THRESHOLD = 0.5
 RIICHI_THRESHOLD = 0.5
 
 #遊戲模式
-AI_ONLY = 1
+RL_MODE = 1
+VAL_MODE = 2
 
 #呼叫前端行為
 NOTHING = 0

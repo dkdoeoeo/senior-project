@@ -18,11 +18,11 @@ torch.autograd.set_detect_anomaly(True)
 
 
 class MahjongAI():
-    def __init__(self,buffer_capacity=300, batch_size = 128):
+    def __init__(self,buffer_capacity=300, batch_size = 128,discard_model_file_pth = 'E:/專題/discard_model/RL/best_model.pth'):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.mahjongHelper = MahjongHelper()
         
-        self.discard_model_file = 'E:/專題/pygame_vision/models/discard_model.pth'
+        self.discard_model_file = discard_model_file_pth
         self.discard_model=torch.load(self.discard_model_file, weights_only=False).to(self.device)
         self.discard_model.eval()
 
@@ -63,6 +63,7 @@ class MahjongAI():
 
         self.start_time = time.time()
         self.last_saved_time = self.start_time
+        self.last_print_info_time = self.start_time
         self.time_interval = 7200
 
         self.best_model_path = 'E:/專題/discard_model/RL/best_model.pth'
@@ -262,13 +263,12 @@ class MahjongAI():
         self.buffer.push(self.pending_transition)
         self.pending_transition = None
 
-    def train_from_buffer(self,train_times):
+    def train_from_buffer(self,train_times, ai_win_times):
 
         if len(self.buffer) < self.buffer.capacity:
-            return train_times
+            return train_times, False, ''
 
         beta=0.01 * (0.995 ** train_times)
-        #print("開始訓練")
         self.discard_model.train()
         batch = self.buffer.sample(self.batch_size)
 
@@ -305,6 +305,7 @@ class MahjongAI():
         self.optimizer.step()
 
         current_time = time.time()
+
         if current_time - self.last_saved_time >= self.time_interval:
             timestamp = time.strftime("%Y%m%d_%H%M%S", time.localtime(current_time))
             model_path = f'E:/專題/discard_model/RL/CNN_discard_model_{timestamp}.pth'
@@ -313,20 +314,20 @@ class MahjongAI():
             #print(f'模型已基於時間間隔存儲，時間: {timestamp}')
 
             discard_model_validator = Discard_model_validator(model_path, best_model_path = self.discard_model_file)
+            discard_model_validator.start()
+
+            """if os.path.exists(self.best_model_path):
+                self.discard_model=torch.load(self.best_model_path, weights_only=False).to(self.device)
+                print(f"[AI] 已切換至最佳模型 {self.best_model_path}")"""
             
-            if discard_model_validator.start():
-                self.discard_model=torch.load(self.best_model_path, weights_only=False).to(self.device)
-                print(f"[AI] 已切換回最佳模型 {self.best_model_path}")
-            """
-            if os.path.exists(self.best_model_path):
-                self.discard_model=torch.load(self.best_model_path, weights_only=False).to(self.device)
-                #print(f"[AI] 已切換至最佳模型 {self.best_model_path}")
-            """
+            if (ai_win_times[0]/sum(ai_win_times)) >= 0.3:
+                self.discard_model.eval()
+                return train_times + 1,True,model_path
         
         self.discard_model.eval()
         #print("結束訓練")
         #print("訓練次數:",train_times + 1)
-        return train_times + 1
+        return train_times + 1,False,''
     
     #棄牌時判斷是否要啟動防守模式
     def should_Defend(self, game_state:my_struct.Game_state):
@@ -672,3 +673,5 @@ class MahjongAI():
         for tile_number in range(34):
             max_opponent_tile_safety.append(min(opponent_tile_safety_matrix[0][tile_number],opponent_tile_safety_matrix[1][tile_number],opponent_tile_safety_matrix[2][tile_number]))
         return max_opponent_tile_safety
+    
+

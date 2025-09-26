@@ -104,12 +104,6 @@ class Discard_model_validator(threading.Thread):
             if accuracy >= best_acc:
                 torch.save(model, self.best_model_path)
                 print(f"[Validator] 新最佳模型，準確率 {accuracy:.2%}，已更新 {self.best_model_path}")
-
-            #保證最低正確率
-            low_acc = 20
-            if accuracy < low_acc:
-                return True
-            return False
         
         except Exception as e:
             print(f"驗證執行緒錯誤：{e}")

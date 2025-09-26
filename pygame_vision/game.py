@@ -11,16 +11,19 @@ from model_define import MyGRU
 import my_struct
 
 class Game():
-    def __init__(self):
-
+    def __init__(self,enable_rl = True, target_ai = '', opponent_ai = ''):
         self.mahjong_AIs = [MahjongAI(),MahjongAI(),MahjongAI(),MahjongAI()]
-        self.game_mode = const.AI_ONLY
+        if target_ai != '' and opponent_ai != '':
+            self.mahjong_AIs = [MahjongAI(discard_model_file_pth = target_ai),MahjongAI(discard_model_file_pth = opponent_ai),MahjongAI(discard_model_file_pth = opponent_ai),MahjongAI(discard_model_file_pth = opponent_ai)]
         self.RL_flag = False
         self.last_predctor_score = 0
         self.ai_win_times = [0,0,0,0]
         self.train_times = 0
+        self.is_above_threshold = False
+        self.should_update_opponent = False
+        self.enable_rl = enable_rl
     
-    def init_game(self,game_mode = const.AI_ONLY):
+    def init_game(self,game_mode = const.RL_MODE):
         self.is_game_running = True
         self.game_state = my_struct.Game_state()
         self.generate_wall()
@@ -32,6 +35,9 @@ class Game():
         self.game_state.players[self.game_state.current_player].hand.append(draw_tile)
         self.sort_hands_list()
         self.game_state.player_behavior = self.get_self_draw_player_action(draw_tile)
+
+        #驗證模式才用到
+        self.num_games = 500
     
     def check_ryukyoku(self):
         if len(self.game_state.wall) == 0:
@@ -198,9 +204,19 @@ class Game():
         current_player = self.game_state.current_player
 
         #強化學習區塊
-        if current_player == 0:
+        if self.enable_rl and current_player == 0:
             self.mahjong_AIs[current_player].store_transition(self.game_state)
-            self.train_times = self.mahjong_AIs[current_player].train_from_buffer(self.train_times)
+            self.train_times,self.is_above_threshold,model_pth  = self.mahjong_AIs[current_player].train_from_buffer(self.train_times,self.ai_win_times)
+            #更新對手
+            if self.is_above_threshold:
+                self.is_above_threshold = False
+                self.mahjong_AIs = [MahjongAI(discard_model_file_pth = model_pth),MahjongAI(discard_model_file_pth = model_pth),MahjongAI(discard_model_file_pth = model_pth),MahjongAI(discard_model_file_pth = model_pth)]
+                self.game_state.game_over = True
+                self.is_above_threshold = False
+                self.should_update_opponent= False
+                self.ai_win_times = [0,0,0,0]
+                print("更新對手")
+                return
 
         if self.game_state.player_behavior.type == const.CHOW:
             self.game_state.player_behavior = self.get_just_discard_player_action()
