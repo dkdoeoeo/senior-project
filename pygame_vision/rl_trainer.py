@@ -13,7 +13,10 @@ from game import Game
 
 
 if __name__ == "__main__":
-    game = Game()
+    game = Game(target_ai = 'E:/專題/discard_model/final_discard_model/new_feature_15_512.pth',
+                opponent_ai = 'E:/專題/discard_model/final_discard_model/new_feature_15_512.pth',
+                target_ai_type = '15_512',
+                opponent_ai_type = '15_512')
     stop_flag = False
     while True:
         if keyboard.is_pressed("esc") or stop_flag:

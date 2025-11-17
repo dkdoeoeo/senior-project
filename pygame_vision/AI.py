@@ -8,9 +8,8 @@ from my_struct.action import Action
 import numpy as np
 import os
 import torch.nn as nn
-from model_define import DiscardCNN
-from model_define import MyCNN
-from model_define import MyGRU
+import model_define
+import sys
 import my_struct
 import time
 from discard_model_validator import Discard_model_validator
@@ -18,13 +17,13 @@ torch.autograd.set_detect_anomaly(True)
 
 
 class MahjongAI():
-    def __init__(self,buffer_capacity=300, batch_size = 128,discard_model_file_pth = 'E:/專題/discard_model/RL/best_model.pth'):
+    def __init__(self,buffer_capacity=300, batch_size = 128,discard_model_file_pth = 'E:/專題/discard_model/RL/best_model.pth',ai_type = 'original'):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.mahjongHelper = MahjongHelper()
-        
-        self.discard_model_file = discard_model_file_pth
-        self.discard_model=torch.load(self.discard_model_file, weights_only=False).to(self.device)
-        self.discard_model.eval()
+        self.model_type = ai_type
+        main_module = sys.modules['__main__']
+
+        setattr(main_module, 'MyCNN', model_define.MyCNN_Original)
 
         self.pung_model_file = 'E:/專題/pygame_vision/models/pung_model.pth'
         self.pung_model=torch.load(self.pung_model_file, weights_only=False).to(self.device)
@@ -48,6 +47,20 @@ class MahjongAI():
         for param in self.predictor_model.parameters():
             param.requires_grad = False
 
+        self.discard_model_file = discard_model_file_pth
+        if ai_type == '15_256':
+            setattr(main_module, 'MyCNN', model_define.MyCNN_15_256)
+        elif ai_type == '15_512':
+            setattr(main_module, 'MyCNN', model_define.MyCNN_15_512)
+        else:
+            setattr(main_module, 'MyCNN', model_define.MyCNN_Original)
+
+        self.discard_model=torch.load(self.discard_model_file, weights_only=False).to(self.device)
+        self.discard_model.eval()
+
+        if hasattr(main_module, 'MyCNN'):
+            delattr(main_module, 'MyCNN')
+
         self.last_state = None
         self.last_predctor_score = 0
         self.last_log_prob = None
@@ -69,6 +82,9 @@ class MahjongAI():
         self.best_model_path = 'E:/專題/discard_model/RL/best_model.pth'
 
     def process_draw(self,game_state:my_struct.Game_state,draw_tile:int, RL_flag = False): #處理自己摸牌
+        discard_model_input = self.mahjongHelper.process_model_input(game_state).to("cuda")
+        if self.model_type == '15_256' or self.model_type == '15_512':
+            discard_model_input = self.mahjongHelper.new_process_model_input(game_state,game_state.current_player).to("cuda")
         model_input = self.mahjongHelper.process_model_input(game_state)
         model_input = model_input.to("cuda")
 
@@ -110,9 +126,9 @@ class MahjongAI():
         if RL_flag:
             return self._reinforce_discard(game_state)
         
-        model_input = model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
-        model_input = model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
-        discard_output = self.discard_model(model_input).float()
+        discard_model_input = discard_model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
+        discard_model_input = discard_model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
+        discard_output = self.discard_model(discard_model_input).float()
         discard_output = discard_output.squeeze(0)
 
         hand_tiles = game_state.players[game_state.current_player].hand
@@ -188,11 +204,13 @@ class MahjongAI():
         if RL_flag:
             return self._reinforce_discard(game_state)
         
-        model_input = self.mahjongHelper.process_model_input(game_state)
-        model_input = model_input.to("cuda")
-        model_input = model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
-        model_input = model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
-        discard_output = self.discard_model(model_input).float()
+        discard_model_input = self.mahjongHelper.process_model_input(game_state).to("cuda")
+        if self.model_type == '15_256' or self.model_type == '15_512':
+            discard_model_input = self.mahjongHelper.new_process_model_input(game_state,game_state.current_player).to("cuda")
+        discard_model_input = discard_model_input.to("cuda")
+        discard_model_input = discard_model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
+        discard_model_input = discard_model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
+        discard_output = self.discard_model(discard_model_input).float()
         discard_output = discard_output.squeeze(0)
 
         hand_tiles = game_state.players[game_state.current_player].hand
@@ -218,10 +236,12 @@ class MahjongAI():
     #決策與暫存強化學習用資料
     def _reinforce_discard(self, game_state:my_struct.Game_state):
 
-        model_input = self.mahjongHelper.process_model_input(game_state).clone().detach().to("cuda")
-        model_input = model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
-        model_input = model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
-        discard_output = self.discard_model(model_input).float()
+        discard_model_input = self.mahjongHelper.process_model_input(game_state).clone().detach().to("cuda")
+        if self.model_type == '15_256' or self.model_type == '15_512':
+            discard_model_input = self.mahjongHelper.new_process_model_input(game_state,game_state.current_player).clone().detach().to("cuda")
+        discard_model_input = discard_model_input.unsqueeze(0).unsqueeze(0)   # [1, 1, 29, 34]
+        discard_model_input = discard_model_input.permute(0, 1, 3, 2)   # [1, 1, 34, 29]
+        discard_output = self.discard_model(discard_model_input).float()
         discard_output = discard_output.squeeze(0)
 
         hand_tiles = game_state.players[game_state.current_player].hand
@@ -243,7 +263,7 @@ class MahjongAI():
         current_predctor_score = self.get_predictor_score(game_state)
 
         self.pending_transition = my_struct.Transition()
-        self.pending_transition.state = model_input.detach()
+        self.pending_transition.state = discard_model_input.detach()
         self.pending_transition.discard = sampled_idx.item()
         self.pending_transition.current_score = current_predctor_score
         self.pending_transition.legal_indices = hand_tile_indices
@@ -254,7 +274,7 @@ class MahjongAI():
     def store_transition(self, next_game_state:my_struct.game_state):
         if self.pending_transition is None:
             return
-        next_state = self.mahjongHelper.process_model_input(next_game_state).clone().detach().to("cuda")
+        next_state = self.mahjongHelper.new_process_model_input(next_game_state,next_game_state.current_player).clone().detach().to("cuda")
         next_score = self.get_predictor_score(next_game_state)
 
         self.pending_transition.next_state = next_state.detach()

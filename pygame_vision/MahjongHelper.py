@@ -150,6 +150,147 @@ class MahjongHelper:
             tile34[tile] += 1
         return tile34
 
+    def compute_remain_tiles(self,game_state: my_struct.Game_state, random_player:int):
+        remain_tile_count = [4]*34
+
+        #減去寶牌
+        for open_dora in range(game_state.open_dora_num):
+            remain_tile_count[game_state.dora[open_dora]] -= 1
+
+        #減去手牌
+        self_Hai_34_List = self.tileNumberTrans(game_state.players[random_player].hand)
+        for tile in self_Hai_34_List:
+            remain_tile_count[tile] -= 1
+
+        #減去棄牌
+        all_discards = [game_state.players[0].discards, game_state.players[1].discards, game_state.players[2].discards, game_state.players[3].discards]
+        for discards in all_discards:
+            for tile in discards:
+                remain_tile_count[tile] -= 1
+        
+        #減去副露
+        for player in game_state.players:
+            for meld in player.meld:
+                for tile in meld.tiles34:
+                    remain_tile_count[tile] -= 1
+        return remain_tile_count
+
+    def decode_to_tile34(self,hand_tiles34):
+        tile34 = [0]*34
+        for tile in hand_tiles34:
+            tile34[tile] += 1
+        return tile34
+    
+    def calc_shanten_change(self,hand_tile:list):
+        shanten_calculator = Shanten()
+        hand_tile_copy = hand_tile[:]
+
+        shanten_change_34 = [0]*34
+
+        for i in range(34):
+            if i in hand_tile_copy:
+                hand_tile_copy.remove(i)
+                new_shanten = shanten_calculator.calculate_shanten(self.decode_to_tile34(hand_tile_copy))
+                shanten_change_34[i] = new_shanten
+                hand_tile_copy.append(i)
+            else:
+                shanten_change_34[i] = 5  # 不在手牌中的牌，設為一個較大的值
+
+        for i in range(34):
+            shanten_change_34[i] = shanten_change_34[i] - min(shanten_change_34)
+
+        return shanten_change_34
+
+    def calc_pon_potential(self,hand_tile:list,remain_count:list):
+        pon_potential = [0]*34
+
+        hand_tile_count = self.decode_to_tile34(hand_tile)
+
+        for i in range(34):
+            if hand_tile_count[i]==3:#已有pon
+                pon_potential[i] = 1
+            elif hand_tile_count[i] == 2 and remain_count[i] >= 1:#已有pair，且還有剩
+                pon_potential[i] = 0.7
+            elif hand_tile_count[i] == 1 and remain_count[i] >= 2:#只有單張，且還有剩
+                pon_potential[i] = 0.4
+            elif hand_tile_count[i] == 0 and remain_count[i] >= 3:#只有單張，且還有剩
+                pon_potential[i] = 0.1
+            else:
+                pon_potential[i] = 0
+        return pon_potential
+
+
+    def calc_chi_potential(self,hand_tile:list,remain_count:list):
+        chi_potential_34 = [0]*34
+
+        for i in range(27):
+            point = 0.0
+            if i % 9 >=2:#(i-2.i-1.i)組合
+                if i-1 in hand_tile:
+                    point += 1
+                else:
+                    point += remain_count[i-1] * 0.1
+
+                if i-2 in hand_tile:
+                    point += 0.7
+                else:
+                    point += remain_count[i-2] * 0.05
+
+            if i % 9 >=1 and i % 9 <= 7:#(i-1.i.i+1)組合
+                if i-1 in hand_tile:
+                    point += 1
+                else:
+                    point += remain_count[i-1] * 0.1
+
+                if i+1 in hand_tile:
+                    point += 1
+                else:
+                    point += remain_count[i+1] * 0.1
+
+            if i % 9 <=6:#(i.i+1.i+2)組合
+                if i+1 in hand_tile:
+                    point += 1
+                else:
+                    point += remain_count[i+1] * 0.1
+
+                if i+2 in hand_tile:
+                    point += 0.7
+                else:
+                    point += remain_count[i+2] * 0.05
+        
+            chi_potential_34[i] = point
+
+        return chi_potential_34
+    
+    def decode_Dora_to_136(self,Dora_Hai_list: list, open_dora_num:int):
+        Dora_Hai_136_list = [0]*136
+        for i in range(open_dora_num):
+            dora = Dora_Hai_list[i]
+            while(Dora_Hai_136_list[dora] == 1):
+                dora = dora + 34
+            Dora_Hai_136_list[dora] = 1
+        return Dora_Hai_136_list
+    
+    def decode_4playersDis_to_136(self,game_state: my_struct.Game_state):
+        Discard_Hai_136_list = [0]*136
+        for dis in game_state.players[0].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        for dis in game_state.players[1].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        for dis in game_state.players[2].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        for dis in game_state.players[3].discards:
+            while(Discard_Hai_136_list[dis] == 1):
+                dis = dis + 34
+            Discard_Hai_136_list[dis] = 1
+        return Discard_Hai_136_list
+    
     def process_model_input(self,game_state: my_struct.Game_state):
 
         self_Hai_34_List = self.tileNumberTrans(game_state.players[game_state.current_player].hand)
@@ -198,6 +339,62 @@ class MahjongHelper:
             Opposite_score_34_List,
             Left_score_34_List,
             rounds_34_list
+        ])
+
+        return torch.tensor(feature_maps,dtype=torch.float32)
+    
+    def new_process_model_input(self,game_state: my_struct.Game_state,random_player: int):
+
+        self_Hai_34_List = self.tileNumberTrans(game_state.players[game_state.current_player].hand)
+        right_Hai_34_list = self.tileNumberTrans(self.merge_meld(game_state.players[(game_state.current_player + 1) % 4].meld))
+        Opposite_Hai_34_list = self.tileNumberTrans(self.merge_meld(game_state.players[(game_state.current_player + 2) % 4].meld))
+        Left_Hai_34_list = self.tileNumberTrans(self.merge_meld(game_state.players[(game_state.current_player + 3) % 4].meld))
+        self_Hai_136_List = self.decode_34_to_136(self_Hai_34_List)
+        right_Hai_136_List = self.decode_34_to_136(right_Hai_34_list)
+        Opposite_Hai_136_List = self.decode_34_to_136(Opposite_Hai_34_list)
+        Left_Hai_136_list = self.decode_34_to_136(Left_Hai_34_list)
+        Dora_Hai_34_list = self.decode_Dora_to_34(game_state.dora,game_state.open_dora_num)
+        Discard_Hai_102_list = self.decode_3playersDis_to_102(game_state,random_player)
+        rounds_34_list = self.decode_rounds_to_34(game_state.round)
+        self_score_34_List = self.decode_score_to_34(game_state.score[game_state.current_player])
+        right_score_34_List = self.decode_score_to_34(game_state.score[(game_state.current_player + 1) % 4])
+        Opposite_score_34_List = self.decode_score_to_34(game_state.score[(game_state.current_player + 2) % 4])
+        Left_score_34_List = self.decode_score_to_34(game_state.score[(game_state.current_player + 3) % 4])
+        remain_tile_count_34 = self.compute_remain_tiles(game_state,random_player)
+        shanten_change_34 = self.calc_shanten_change(game_state.players[game_state.current_player].hand)
+        pon_potential_34 = self.calc_pon_potential(self_Hai_34_List,remain_tile_count_34)
+        chi_potential_34 = self.calc_chi_potential(self_Hai_34_List,remain_tile_count_34)
+
+        feature_maps = np.array([
+            self_Hai_136_List[0:34],
+            self_Hai_136_List[34:68],
+            self_Hai_136_List[68:102],
+            self_Hai_136_List[102:136],
+            right_Hai_136_List[0:34],
+            right_Hai_136_List[34:68],
+            right_Hai_136_List[68:102],
+            right_Hai_136_List[102:136],
+            Opposite_Hai_136_List[0:34],
+            Opposite_Hai_136_List[34:68],
+            Opposite_Hai_136_List[68:102],
+            Opposite_Hai_136_List[102:136],
+            Left_Hai_136_list[0:34],
+            Left_Hai_136_list[34:68],
+            Left_Hai_136_list[68:102],
+            Left_Hai_136_list[102:136],
+            Dora_Hai_34_list[0:34],
+            Discard_Hai_102_list[0:34],
+            Discard_Hai_102_list[34:68],
+            Discard_Hai_102_list[68:102],
+            self_score_34_List,
+            right_score_34_List,
+            Opposite_score_34_List,
+            Left_score_34_List,
+            rounds_34_list,
+            remain_tile_count_34,
+            shanten_change_34,
+            pon_potential_34,
+            chi_potential_34
         ])
 
         return torch.tensor(feature_maps,dtype=torch.float32)
@@ -280,14 +477,11 @@ class MahjongHelper:
                     Hai_34_List[j] = Hai_34_List[j] - 1
         return Hai_136_List
     
-    def decode_Dora_to_136(self,Dora_Hai_list: list, open_dora_num:int):
-        Dora_Hai_136_list = [0]*136
+    def decode_Dora_to_34(self,Dora_Hai_list: list, open_dora_num:int):
+        Dora_Hai_34_list = [0]*34
         for i in range(open_dora_num):
-            dora = Dora_Hai_list[i]
-            while(Dora_Hai_136_list[dora] == 1):
-                dora = dora + 34
-            Dora_Hai_136_list[dora] = 1
-        return Dora_Hai_136_list
+            Dora_Hai_34_list[Dora_Hai_list[i]] = 1
+        return Dora_Hai_34_list
     
     def decode_Dora_to_5(self,Dora_Hai_list: list, open_dora_num:int):
         Dora_Hai_5_list = [-1]*5
@@ -295,25 +489,22 @@ class MahjongHelper:
             Dora_Hai_5_list[i] = Dora_Hai_list[i]
         return Dora_Hai_5_list
     
-    def decode_4playersDis_to_136(self,game_state: my_struct.Game_state):
-        Discard_Hai_136_list = [0]*136
-        for dis in game_state.players[0].discards:
-            while(Discard_Hai_136_list[dis] == 1):
-                dis = dis + 34
-            Discard_Hai_136_list[dis] = 1
-        for dis in game_state.players[1].discards:
-            while(Discard_Hai_136_list[dis] == 1):
-                dis = dis + 34
-            Discard_Hai_136_list[dis] = 1
-        for dis in game_state.players[2].discards:
-            while(Discard_Hai_136_list[dis] == 1):
-                dis = dis + 34
-            Discard_Hai_136_list[dis] = 1
-        for dis in game_state.players[3].discards:
-            while(Discard_Hai_136_list[dis] == 1):
-                dis = dis + 34
-            Discard_Hai_136_list[dis] = 1
-        return Discard_Hai_136_list
+    def decode_3playersDis_to_102(self,game_state: my_struct.Game_state, random_player: int):
+        Discard_Hai_102_list = [0]*102
+        all_discards = [game_state.players[0].discards, game_state.players[1].discards, game_state.players[2].discards, game_state.players[3].discards]
+        ordered_players = [(random_player + 1) % 4,(random_player + 2) % 4,(random_player + 3) % 4]
+
+        for seg_idx, player in enumerate(ordered_players):
+            base = seg_idx * 34  # 第幾段 (0, 34, 68)
+            recent_discards = all_discards[player][-6:]  # 該玩家最後 6 張棄牌
+
+            for dis in recent_discards:
+                dis34 = int(dis / 4)
+                target_idx = base + dis34  # 將該牌標記到該玩家的區段中
+
+                if target_idx < len(Discard_Hai_102_list):
+                    Discard_Hai_102_list[target_idx] = 1
+        return Discard_Hai_102_list
 
     def decode_score_to_34(self,score: int):
         score_34 = [0]*34

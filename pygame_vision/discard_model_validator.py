@@ -38,7 +38,7 @@ class Discard_model_validator(threading.Thread):
             self.dataset = MyDataset('E:/專題/data/2022/DiscardData.csv', chunk_size=50000)
             self.test_dataloader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False)
 
-            model = torch.load(self.model_path)
+            model = torch.load(self.model_path, weights_only=False)
             model.to(self.device)
             model.eval()
 

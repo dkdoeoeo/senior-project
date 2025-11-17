@@ -11,10 +11,11 @@ from model_define import MyGRU
 import my_struct
 
 class Game():
-    def __init__(self,enable_rl = True, target_ai = '', opponent_ai = ''):
-        self.mahjong_AIs = [MahjongAI(),MahjongAI(),MahjongAI(),MahjongAI()]
+    def __init__(self,enable_rl = True, target_ai = '', opponent_ai = '', target_ai_type = '', opponent_ai_type = ''):
         if target_ai != '' and opponent_ai != '':
-            self.mahjong_AIs = [MahjongAI(discard_model_file_pth = target_ai),MahjongAI(discard_model_file_pth = opponent_ai),MahjongAI(discard_model_file_pth = opponent_ai),MahjongAI(discard_model_file_pth = opponent_ai)]
+            self.mahjong_AIs = [MahjongAI(discard_model_file_pth = target_ai, ai_type = target_ai_type),MahjongAI(discard_model_file_pth = opponent_ai, ai_type = opponent_ai_type),MahjongAI(discard_model_file_pth = opponent_ai, ai_type = opponent_ai_type),MahjongAI(discard_model_file_pth = opponent_ai, ai_type = opponent_ai_type)]
+        else:
+            self.mahjong_AIs = [MahjongAI(),MahjongAI(),MahjongAI(),MahjongAI()]
         self.RL_flag = False
         self.last_predctor_score = 0
         self.ai_win_times = [0,0,0,0]

@@ -33,9 +33,9 @@ class DiscardCNN(nn.Module):
         x = self.fc(x)
         
         return x
-class MyCNN(nn.Module):
+class MyCNN_Original(nn.Module):
     def __init__(self, num_layers = 10, input_features=34, input_channels=29, output_features=1):
-        super(MyCNN, self).__init__()
+        super(MyCNN_Original, self).__init__()
         
         self.conv_layers = nn.ModuleList()
 
@@ -92,7 +92,7 @@ class MyDataset(Dataset):
         self.chunk_size = chunk_size
         
         self.columns = pd.read_csv(self.file_path, nrows=0).columns.str.strip().str.replace('\xa0', ' ').tolist()
-        self.train_columns = [col for col in self.columns if col != 'discard']  # 排除 'discard' 欄位
+        self.train_columns = [col for col in self.columns if col != 'Discard']  # 排除 'Discard' 欄位
         self.num_samples = sum(1 for _ in open(self.file_path, encoding='utf-8')) - 1  # 計算總樣本數
         
     def __getitem__(self, idx):
@@ -101,7 +101,7 @@ class MyDataset(Dataset):
 
         df.columns = self.columns
         
-        if 'discard' not in df.columns:
+        if 'Discard' not in df.columns:
             raise KeyError(f"Chunk starting at row {chunk_start + 1} does not contain 'Discard' column.")
         
             
@@ -110,9 +110,86 @@ class MyDataset(Dataset):
         train_data = df[self.train_columns].iloc[sample_idx].values.astype("float32")
         train_data = train_data.reshape(34, 29)
         
-        value_data = df['discard'].iloc[sample_idx]  # 提取 'Discard' 欄位
+        value_data = df['Discard'].iloc[sample_idx]  # 提取 'Discard' 欄位
         
         return torch.tensor(train_data, dtype=torch.float32), torch.tensor(value_data, dtype=torch.long)
         
     def __len__(self):
         return self.num_samples
+    
+
+class MyCNN_15_256(nn.Module):
+    def __init__(self, num_layers = 15, input_features=34, input_channels=29, output_features=34):
+        super(MyCNN_15_256, self).__init__()
+        
+        self.conv_layers = nn.ModuleList()
+
+        self.conv_layers.append(nn.Conv1d(in_channels=input_channels, out_channels=256, kernel_size=3, padding=1))
+        
+        for _ in range(1, num_layers - 1):
+            self.conv_layers.append(
+                nn.Sequential(
+                    nn.Conv1d(in_channels=256, out_channels=256, kernel_size=3, padding=1),
+                    nn.BatchNorm1d(256),
+                    nn.LeakyReLU(0.01)
+                    )
+            )
+        
+        self.conv_layers.append(nn.Conv1d(in_channels=256, out_channels=1, kernel_size=1, padding=0))
+        
+        self.activation = nn.LeakyReLU(negative_slope=0.01)
+
+        self.fc = nn.Linear(input_features, output_features)
+    def forward(self, x):
+        x = x.squeeze(1)
+        x = x.permute(0, 2, 1)
+
+        for i, conv in enumerate(self.conv_layers):
+            if(i < len(self.conv_layers) - 1):
+                x = self.activation(conv(x))
+            else:
+                x = conv(x)
+                
+        x = x.squeeze(1)
+        x = self.fc(x)
+        
+        return x
+    
+class MyCNN_15_512(nn.Module):
+    def __init__(self, num_layers = 15, input_features=34, input_channels=29, output_features=34):
+        super(MyCNN_15_512, self).__init__()
+        self.conv_layers = nn.ModuleList()
+
+        self.conv_layers.append(nn.Conv1d(in_channels=input_channels, out_channels=512, kernel_size=3, padding=1))
+        
+        for _ in range(1, num_layers - 1):
+            self.conv_layers.append(
+                nn.Sequential(
+                    nn.Conv1d(in_channels=512, out_channels=512, kernel_size=3, padding=1),
+                    nn.BatchNorm1d(512),
+                    nn.LeakyReLU(0.01)
+                    )
+            )
+        
+        self.conv_layers.append(nn.Conv1d(in_channels=512, out_channels=1, kernel_size=1, padding=0))
+        
+        self.activation = nn.LeakyReLU(negative_slope=0.01)
+
+        self.fc = nn.Linear(input_features, output_features)
+    def forward(self, x):
+        x = x.squeeze(1)
+        x = x.permute(0, 2, 1)
+
+        for i, conv in enumerate(self.conv_layers):
+            if(i < len(self.conv_layers) - 1):
+                x = self.activation(conv(x))
+            else:
+                x = conv(x)
+                
+        x = x.squeeze(1)
+        x = self.fc(x)
+        
+        return x
+    
+class MyCNN(nn.Module):
+    pass

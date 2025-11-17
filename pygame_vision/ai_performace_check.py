@@ -11,9 +11,9 @@ import my_struct
 from game import Game
 
 stop_flag = False
-target_ai = 'E:/專題/discard_model/RL/CNN_discard_model_20250919_155448.pth'
-opponent_ai = 'E:/專題/discard_model/RL/best_model.pth'
-game = Game(enable_rl = False,target_ai=target_ai,opponent_ai=opponent_ai)
+target_ai = 'E:/專題/discard_model/RL/CNN_discard_model_20251114_103401.pth'
+opponent_ai = 'E:/專題/discard_model/RL/CNN_discard_model_20251114_083327.pth'
+game = Game(enable_rl = False,target_ai=target_ai,opponent_ai=opponent_ai,target_ai_type = '15_512',opponent_ai_type = '15_256')
 num_games = 500
 
 start_time = time.time()
