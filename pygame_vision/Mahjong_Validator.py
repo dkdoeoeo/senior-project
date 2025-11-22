@@ -298,7 +298,12 @@ class AIWrapper:
 
     def process_draw(self, ui_state):
         if not self.ai: return "模擬: 切 1m"
-        if len(ui_state.players[0].hand) != 14: return "錯誤: 手牌需 14 張"
+        
+        # 修正：不再限制必須 14 張，而是滿足 3n+2 (2, 5, 8, 11, 14) 即可
+        hand_len = len(ui_state.players[0].hand)
+        if hand_len % 3 != 2: 
+            return f"錯誤: 手牌數 {hand_len} 不正確 (應為 2, 5, 8, 11, 14 張)"
+
         try:
             draw_tile = ui_state.players[0].hand[-1]
             real_state = self._sync_to_real_state(ui_state, exclude_last_hand_tile=True)
